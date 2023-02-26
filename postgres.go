@@ -1,9 +1,11 @@
 package postgres
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/postgres"
@@ -31,6 +33,17 @@ func (d DSN) String() string {
 
 func Open(d DSN) (*sql.DB, error) {
 	return sql.Open("postgres", d.String())
+}
+
+func Ping(db *sql.DB) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	if err := db.PingContext(ctx); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func MigrateUp(db *sql.DB, migrationsPath string) error {
